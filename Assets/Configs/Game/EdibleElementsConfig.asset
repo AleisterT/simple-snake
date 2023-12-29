@@ -14,5 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   edibleElements:
   - {fileID: 11400000, guid: 07144c75f63c6b34daf5d61f6fa08aa7, type: 2}
+  - {fileID: 11400000, guid: ea9191200d05d5e459021df210cb7f0e, type: 2}
+  - {fileID: 11400000, guid: fff6a2564de64794e94587b7347c5181, type: 2}
+  - {fileID: 11400000, guid: de42ef5a1792a1e469868fb567222e82, type: 2}
+  - {fileID: 11400000, guid: a1177411336802f49be24552c4bc7473, type: 2}
   <EdibleElementPrefab>k__BackingField: {fileID: 8418945552537426003, guid: d0d86c0f44ecd7548a0749b42683ffdd,
     type: 3}
