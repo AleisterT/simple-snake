@@ -6,19 +6,19 @@ using UnityEngine.InputSystem;
 
 namespace SnakeGame.Gameplay
 {
-    public class GameplayInputHandler : IDisposable
+    public class GameplayInputService : IDisposable
     {
-        private readonly PauseController _pauseController;
+        private readonly GameStateService _gameStateService;
         private readonly SnakeController _snakeController;
         private readonly CompositeDisposable _disposables = new();
         private readonly GameplayInputActions _gameplayInputActions;
 
-        public GameplayInputHandler(SnakeController snakeController, PauseController pauseController)
+        public GameplayInputService(SnakeController snakeController, GameStateService gameStateService)
         {
             _snakeController = snakeController;
-            _pauseController = pauseController;
+            _gameStateService = gameStateService;
 
-            _gameplayInputActions = new();
+            _gameplayInputActions = new GameplayInputActions();
             _gameplayInputActions.AddTo(_disposables);
 
             SubscribeInputEvents();
@@ -55,7 +55,7 @@ namespace SnakeGame.Gameplay
             Observable.FromEvent<InputAction.CallbackContext>(
                     h => _gameplayInputActions.Gameplay.Pause.performed += h,
                     h => _gameplayInputActions.Gameplay.Pause.performed -= h)
-                .Subscribe(_ => _pauseController.TogglePause())
+                .Subscribe(_ => _gameStateService.TogglePause())
                 .AddTo(_disposables);
         }
 

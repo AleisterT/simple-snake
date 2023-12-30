@@ -3,7 +3,7 @@ using UniRx;
 
 namespace SnakeGame.Gameplay
 {
-    public class ScoreController : IDisposable
+    public class ScoreService : IDisposable
     {
         private readonly ReactiveProperty<int> _score = new(0);
         public IReadOnlyReactiveProperty<int> Score => _score;

@@ -15,14 +15,14 @@ namespace SnakeGame.Gameplay.Edibles
 
         public EdibleElement GetRandomEdibleElement()
         {
-            float weight = edibleElements.Sum(edibleElement => edibleElement.Weight);
+            var weight = edibleElements.Sum(edibleElement => edibleElement.Weight);
 
             if (weight == 0)
             {
                 Debug.LogWarning($"Total weight of random elements is 0 in {name}");
             }
 
-            float randomWeight = Random.Range(0, weight);
+            var randomWeight = Random.Range(0, weight);
 
             weight = 0;
             foreach (var edibleElement in edibleElements)

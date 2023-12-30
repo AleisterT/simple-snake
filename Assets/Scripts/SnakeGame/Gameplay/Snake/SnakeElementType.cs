@@ -3,6 +3,6 @@
     public enum SnakeElementType
     {
         Head,
-        Regular,
+        Regular
     }
 }

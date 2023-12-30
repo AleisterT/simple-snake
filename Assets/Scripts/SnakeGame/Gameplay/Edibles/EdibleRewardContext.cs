@@ -5,13 +5,13 @@ namespace SnakeGame.Gameplay.Edibles
     public readonly struct EdibleRewardContext
     {
         public EdibleRewardContext(SnakeController snakeController,
-            SnakeSpeedModifierController speedModifierController)
+            SnakeSpeedModifierService speedModifierService)
         {
             SnakeController = snakeController;
-            SpeedModifierController = speedModifierController;
+            SpeedModifierService = speedModifierService;
         }
 
         public SnakeController SnakeController { get; }
-        public SnakeSpeedModifierController SpeedModifierController { get; }
+        public SnakeSpeedModifierService SpeedModifierService { get; }
     }
 }

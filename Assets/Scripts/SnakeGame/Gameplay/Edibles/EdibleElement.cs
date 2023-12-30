@@ -8,7 +8,6 @@ namespace SnakeGame.Gameplay.Edibles
 
         public virtual void GrantReward(EdibleRewardContext edibleRewardContext)
         {
-            
         }
     }
 }

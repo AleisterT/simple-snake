@@ -10,7 +10,7 @@ namespace SnakeGame.Gameplay.Edibles
 
         public override void GrantReward(EdibleRewardContext edibleRewardContext)
         {
-            edibleRewardContext.SpeedModifierController.SetSpeedMultiplier(SpeedMultiplier, BonusTime);
+            edibleRewardContext.SpeedModifierService.SetSpeedMultiplier(SpeedMultiplier, BonusTime);
         }
     }
 }

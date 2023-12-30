@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 486fbef1f70049fca309723ba25b900c, type: 3}
   m_Name: IncreaseLengthEdible
   m_EditorClassIdentifier: 
-  <Weight>k__BackingField: 0
+  <Weight>k__BackingField: 1

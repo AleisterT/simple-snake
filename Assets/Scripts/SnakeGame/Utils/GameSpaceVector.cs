@@ -11,7 +11,7 @@ namespace SnakeGame.Utils
 
         public GameSpaceVector(float x, float y)
         {
-            _vector = new(x, y);
+            _vector = new Vector2(x, y);
         }
 
         public GameSpaceVector(Vector2 vector)
@@ -21,9 +21,12 @@ namespace SnakeGame.Utils
 
         public static GameSpaceVector FromWorldSpaceVector(Vector3 worldSpaceVector)
         {
-            return new(worldSpaceVector.x, worldSpaceVector.z);
+            return new GameSpaceVector(worldSpaceVector.x, worldSpaceVector.z);
         }
 
-        public Vector3 ToWorldSpace() => new(_vector.x, 0, _vector.y);
+        public Vector3 ToWorldSpace()
+        {
+            return new Vector3(_vector.x, 0, _vector.y);
+        }
     }
 }

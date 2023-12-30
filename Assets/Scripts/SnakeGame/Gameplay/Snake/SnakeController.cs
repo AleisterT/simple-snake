@@ -11,23 +11,26 @@ using UnityEngine.Pool;
 
 namespace SnakeGame.Gameplay.Snake
 {
-    public class SnakeController : MonoBehaviour
+    public class SnakeController : MonoBehaviour, IDisposable
     {
-        private readonly List<SnakeElementView> _elements = new();
-
-        private ObjectPool<SnakeElementView> _elementsPool;
-
-        public float Speed { get; private set; }
-        private float _nextUpdateTime = 0;
-        private bool _addLastElementInNextUpdate = false;
-
-        private GameSpaceVector _direction;
-        private SnakeConfig _snakeConfig;
-
         public float ElementSize => _elements[0].Length;
 
-        public void Initialize()
+        private readonly CompositeDisposable _disposables = new();
+        private readonly List<SnakeElementView> _elements = new();
+        private ObjectPool<SnakeElementView> _elementsPool;
+
+        private SnakeConfig _snakeConfig;
+        private GameStateService _gameStateService;
+
+        private float _speed;
+        private float _nextUpdateTime;
+        private bool _addLastElementInNextUpdate;
+        private GameSpaceVector _direction;
+        private float _lastDirectionChangeUpdateTime;
+
+        public void Initialize(GameStateService gameStateService)
         {
+            _gameStateService = gameStateService;
             _snakeConfig = GameConfigs.GetConfig<SnakeConfig>();
 
             InitializePool();
@@ -38,20 +41,26 @@ namespace SnakeGame.Gameplay.Snake
 
         private void CreateBody(int length)
         {
-            SnakeElementView head = _elementsPool.Get();
+            var head = _elementsPool.Get();
             head.Initialize(SnakeElementType.Head, Vector3.zero);
 
-            head.OnHitEdgeAsObservable().Subscribe(OnHeadHitEdge);
+            head.OnHitEdgeAsObservable().Subscribe(OnHeadHitEdge).AddTo(_disposables);
+            head.OnHitSnakeAsObservable().Subscribe(OnHeadHitSnake).AddTo(_disposables);
 
             _elements.Add(head);
 
-            for (int i = 0; i < length; i++)
+            for (var i = 0; i < length; i++)
             {
-                SnakeElementView previousElement = _elements[i];
-                Vector3 initialPosition = previousElement.transform.position -
-                                          _direction.ToWorldSpace() * previousElement.Length;
+                var previousElement = _elements[i];
+                var initialPosition = previousElement.transform.position -
+                                      _direction.ToWorldSpace() * previousElement.Length;
                 SpawnNewElement(initialPosition);
             }
+        }
+
+        private void OnHeadHitSnake(SnakeElementView snakeElementView)
+        {
+            _gameStateService.Restart();
         }
 
         private void OnHeadHitEdge(EdgeView edgeView)
@@ -63,7 +72,7 @@ namespace SnakeGame.Gameplay.Snake
 
         private void SpawnNewElement(Vector3 position)
         {
-            SnakeElementView elementInstance = _elementsPool.Get();
+            var elementInstance = _elementsPool.Get();
             elementInstance.Initialize(SnakeElementType.Regular, position);
             _elements.Add(elementInstance);
         }
@@ -76,60 +85,82 @@ namespace SnakeGame.Gameplay.Snake
                 element => element.gameObject.SetActive(false),
                 Destroy
             );
+            _elementsPool.AddTo(_disposables);
         }
 
         public void SetSpeed(float speed)
         {
-            Speed = speed;
+            _speed = speed;
         }
 
         public void TrySetDirection(Direction direction)
         {
-            bool isDirectionInSameAxis = Math.Abs(_direction.X - direction.ToGameVector().X) < float.Epsilon ||
-                                         Math.Abs(_direction.Y - direction.ToGameVector().Y) < float.Epsilon;
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            var alreadyChangedDirectionInThisUpdate = _lastDirectionChangeUpdateTime == _nextUpdateTime;
+            if (alreadyChangedDirectionInThisUpdate)
+            {
+                return;
+            }
+
+            var isDirectionInSameAxis = Math.Abs(_direction.X - direction.ToGameVector().X) < float.Epsilon ||
+                                        Math.Abs(_direction.Y - direction.ToGameVector().Y) < float.Epsilon;
             if (isDirectionInSameAxis)
             {
                 return;
             }
 
             _direction = direction.ToGameVector();
+            _lastDirectionChangeUpdateTime = _nextUpdateTime;
         }
 
-        private void Update()
+        public void UpdateGameplay(float time)
         {
-            if (_nextUpdateTime > Time.time)
+            if (_nextUpdateTime > time)
             {
                 return;
             }
 
-            _nextUpdateTime = Time.time + 1 / Speed;
+            _nextUpdateTime = time + 1 / _speed;
 
-            if (_addLastElementInNextUpdate)
+            TryAddNextElement();
+
+            UpdateSnake();
+        }
+
+        private void UpdateSnake()
+        {
+            for (var index = _elements.Count - 1; index >= 0; index--) UpdateElement(index);
+        }
+
+        private void UpdateElement(int index)
+        {
+            var snakeElementView = _elements[index];
+
+            switch (snakeElementView.ElementType)
             {
-                SpawnNewElement(_elements[^1].transform.position);
-                _addLastElementInNextUpdate = false;
+                case SnakeElementType.Head:
+                    snakeElementView.transform.position += _direction.ToWorldSpace() * snakeElementView.Length;
+                    Assert.AreEqual(index, 0);
+                    break;
+                case SnakeElementType.Regular:
+                    Assert.AreNotEqual(index, 0);
+                    var previousElement = _elements[index - 1];
+                    snakeElementView.transform.position = previousElement.transform.position;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        private void TryAddNextElement()
+        {
+            if (!_addLastElementInNextUpdate)
+            {
+                return;
             }
 
-
-            for (var index = _elements.Count - 1; index >= 0; index--)
-            {
-                var snakeElementView = _elements[index];
-
-                switch (snakeElementView.ElementType)
-                {
-                    case SnakeElementType.Head:
-                        snakeElementView.transform.position += _direction.ToWorldSpace() * snakeElementView.Length;
-                        Assert.AreEqual(index, 0);
-                        break;
-                    case SnakeElementType.Regular:
-                        Assert.AreNotEqual(index, 0);
-                        var previousElement = _elements[index - 1];
-                        snakeElementView.transform.position = previousElement.transform.position;
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-            }
+            SpawnNewElement(_elements[^1].transform.position);
+            _addLastElementInNextUpdate = false;
         }
 
         public void IncreaseLength()
@@ -162,9 +193,9 @@ namespace SnakeGame.Gameplay.Snake
             }
         }
 
-        public void SetPause(bool isPaused)
+        public void Dispose()
         {
-            _nextUpdateTime = isPaused ? float.MaxValue : Time.time;
+            _disposables.Dispose();
         }
     }
 }

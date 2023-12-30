@@ -19,12 +19,12 @@ namespace SnakeGame.Gameplay.View
 
         private void AlignBorderToMultipleOfSnakeSize(float snakeElementSize)
         {
-            GameSpaceVector nearestMultiplicationOfSnakeSize = new GameSpaceVector(
+            var nearestMultiplicationOfSnakeSize = new GameSpaceVector(
                 Mathf.Round(InnerBorderCenter.X / snakeElementSize) * snakeElementSize,
                 Mathf.Round(InnerBorderCenter.Y / snakeElementSize) * snakeElementSize
             );
 
-            Vector3 pivotOffset = transform.position - innerBorderCenter.transform.position;
+            var pivotOffset = transform.position - innerBorderCenter.transform.position;
 
             transform.position = nearestMultiplicationOfSnakeSize.ToWorldSpace() + pivotOffset;
         }
